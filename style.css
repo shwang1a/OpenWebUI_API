@@ -1,0 +1,157 @@
+:root {
+  --primary-color: #4a90e2;
+  --bg-color: #f4f7f9;
+  --chat-bg: #ffffff;
+  --user-msg: #e3f2fd;
+  --ai-msg: #f1f1f1;
+}
+
+body {
+  font-family: "Microsoft JhengHei", sans-serif;
+  background-color: var(--bg-color);
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  width: 90%;
+  max-width: 1000px;
+  height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--chat-bg);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+header {
+  background: var(--primary-color);
+  color: white;
+  padding: 15px 20px;
+  text-align: center;
+}
+
+#chat-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+#chat-box {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  max-width: 85%;
+  word-wrap: break-word;
+  line-height: 1.6;
+}
+
+.user {
+  align-self: flex-end;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.ai {
+  align-self: flex-start;
+  background-color: var(--ai-msg);
+  color: #333;
+}
+
+/* 圖表容器樣式 */
+.chart-container {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 10px;
+  overflow-x: auto;
+}
+
+.chart-container svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.input-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px;
+  border-top: 1px solid #eee;
+}
+
+.input-area label {
+  color: #333;
+  white-space: nowrap;
+}
+
+#modelSelect {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  outline: none;
+  background: white;
+}
+
+#userInput {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  outline: none;
+}
+
+#sendBtn {
+  padding: 0 20px;
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#sendBtn:hover {
+  background: #357abd;
+}
+
+/* 針對 Markdown 解析後的內容美化 */
+.markdown-content ul,
+.markdown-content ol {
+  padding-left: 20px;
+  margin: 5px 0;
+}
+
+.markdown-content li {
+  margin-bottom: 5px;
+}
+
+.markdown-content strong {
+  color: #2c3e50; /* 讓粗體稍微明顯一點 */
+  font-weight: 700;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3 {
+  margin: 10px 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 5px;
+}
+
+/* 讓 AI 的訊息框可以根據內容寬度自動調整 */
+.ai.markdown-content {
+  background-color: #f8f9fa;
+  max-width: 90%;
+  color: #333;
+}

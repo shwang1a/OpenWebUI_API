@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>Open WebUI 知識庫存取測試</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
+        #chat-box { width: 100%; height: 300px; border: 1px solid #ccc; overflow-y: scroll; padding: 10px; margin-bottom: 10px; background: #f9f9f9; }
+        .user { color: blue; }
+        .ai { color: green; }
+    </style>
+</head>
+<body>
+
+    <h2>詢問 POPS 知識庫</h2>
+    
+    <div id="chat-box"></div>
+    
+    <input type="text" id="userInput" placeholder="輸入關於持久性有機污染物的問題..." style="width: 80%;">
+    <button onclick="sendMessage()">傳送</button>
+
+    <script>
+        // 設定區
+        const API_KEY = 'sk-0272fcf92eb543d7bf1ae39f29f2d2d5';
+        const BASE_URL = 'https://webui.igis.com.tw/api';
+        const MODEL_ID = 'pops'; // 替換為你在 Open WebUI 中設定的模型或知識庫 ID
+
+        async function sendMessage() {
+            const inputField = document.getElementById('userInput');
+            const chatBox = document.getElementById('chat-box');
+            const userText = inputField.value;
+
+            if (!userText) return;
+
+            // 顯示使用者訊息
+            chatBox.innerHTML += `<p class="user"><strong>你:</strong> ${userText}</p>`;
+            inputField.value = '';
+
+            try {
+                const response = await fetch(`${BASE_URL}/chat/completions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: MODEL_ID,
+                        messages: [
+                            { role: 'user', content: userText }
+                        ]
+                    })
+                });
+
+                const data = await response.json();
+                const aiResponse = data.choices[0].message.content;
+
+                // 顯示 AI 回傳內容
+                chatBox.innerHTML += `<p class="ai"><strong>AI:</strong> ${aiResponse}</p>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+
+            } catch (error) {
+                console.error('Error:', error);
+                chatBox.innerHTML += `<p style="color:red;">錯誤: 無法連接到 Open WebUI API</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
