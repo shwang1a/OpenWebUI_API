@@ -16,11 +16,21 @@ const modelSelect = document.getElementById("modelSelect");
  * 發送訊息（Streaming版）
  */
 async function sendMessage() {
-  const text = userInput.value.trim();
+  let text = userInput.value.trim();
   if (!text) return;
+
+  let fullContent = "";
+  let sources = [];
+  let tool_ids = [];
 
   if (modelSelect) {
     MODEL_ID = modelSelect.value;
+    if (MODEL_ID === "pops_簡報") {
+      tool_ids = ["export_to_pptx"];
+      text += "，製作簡報";
+    } else {
+      tool_ids = [];
+    }
   }
 
   appendMessage("user", text);
@@ -30,9 +40,6 @@ async function sendMessage() {
   const aiDiv = document.createElement("div");
   aiDiv.className = "message ai markdown-content";
   chatBox.appendChild(aiDiv);
-
-  let fullContent = "";
-  let sources = [];
 
   try {
     const response = await fetch(`${CONFIG.BASE_URL}/chat/completions`, {
@@ -44,6 +51,8 @@ async function sendMessage() {
       body: JSON.stringify({
         model: MODEL_ID,
         messages: [{ role: "user", content: text }],
+        tool_ids: ["export_to_pptx"],
+        tool_servers: [],
         stream: true, // ✅ 開啟 streaming
       }),
     });
