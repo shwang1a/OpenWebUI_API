@@ -25,11 +25,17 @@ async function sendMessage() {
 
   if (modelSelect) {
     MODEL_ID = modelSelect.value;
-    if (MODEL_ID === "pops_簡報") {
-      tool_ids = ["export_to_pptx"];
-      text += "，製作簡報";
-    } else {
-      tool_ids = [];
+    switch (MODEL_ID) {
+      case "pops_簡報":
+        tool_ids = ["export_to_pptx"];
+        text += "，製作簡報";
+        break;
+      case "pops_mp3":
+        tool_ids = ["export_to_mp3"];
+        text += "，下載音檔";
+        break;
+      default:
+        tool_ids = [];
     }
   }
 
@@ -51,7 +57,7 @@ async function sendMessage() {
       body: JSON.stringify({
         model: MODEL_ID,
         messages: [{ role: "user", content: text }],
-        tool_ids: ["export_to_pptx"],
+        tool_ids: tool_ids, // ✅ 傳入工具 ID
         tool_servers: [],
         stream: true, // ✅ 開啟 streaming
       }),
