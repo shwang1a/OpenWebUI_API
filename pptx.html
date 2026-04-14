@@ -1,160 +1,283 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <title>Markdown to PPTX Converter</title>
     <script src="pptxgen.bundle.js"></script>
     <style>
-        body { font-family: sans-serif; padding: 20px; line-height: 1.6; }
-        .container { max-width: 800px; margin: auto; text-align: center; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
-        button:hover { background: #0056b3; }
-        pre { text-align: left; background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h2>PBDEs 檢測成果簡報轉換器</h2>
-    <p>點擊下方按鈕將 Markdown 內容轉換為 PowerPoint 檔案</p>
-    <button onclick="generatePPT()">下載 PPTX 簡報</button>
-    <hr>
-    <h3>預覽原始內容：</h3>
-    <pre id="sourceContent"></pre>
-</div>
-
-<script>
-// 你提供的原始 Markdown 內容
-const rawMarkdown = `## 第1頁｜標題頁
-**標題：多溴二苯醚（PBDEs）在市售商品及食品之檢測成果** **副標題：依國內歷年 POPs 執行成果彙整** **日期：2026 年 4 月**
-
-**講稿：** 本簡報整理國內歷年針對多溴二苯醚在市售商品與食品中的檢測成果，重點包括檢出情形、類別分布與管理意涵，作為 POPs 風險監測與管制參考。
-
----
-
-## 第2頁｜簡報大綱
-1. PBDEs 監測背景  
-2. 市售商品檢測成果  
-3. 市售食品檢測成果  
-4. 整體趨勢與管理意涵  
-
-**講稿：** 本次內容將先說明 PBDEs 的監測範圍，再分別整理市售商品與食品的檢測結果，最後歸納其整體趨勢與政策意涵。
-
----
-
-## 第3頁｜PBDEs 監測背景
-- PBDEs 屬於溴化阻燃劑類 POPs
-- 國內長期針對：市售商品、食品、農作物、禽畜漁產品、環境介質進行監測
-- 監測目的：掌握暴露來源、評估風險、支援管理與標準修訂
-
-**講稿：** 多溴二苯醚屬於持久性有機污染物中的溴化阻燃劑，國內針對商品與食品皆有長期監測，目的在於確認暴露來源並作為風險管理依據。
-
----
-
-## 第4頁｜市售商品檢測成果
-- 2016 空氣清淨機零組件：1 品牌 4 種塑膠零組件檢出超過限量，以十溴二苯醚為主
-- 2018 電腦機殼、吹風機、電源延長線：6 件樣品中 5 件未檢出，符合 0.1 wt% 限量
-- 2022–2024 兒童玩具用品：均未檢出五溴二苯醚及八溴二苯醚
-
-**講稿：** 市售商品的檢測顯示，大多數品項已低檢出或未檢出。少數異常集中於個別塑膠零組件，但整體仍受國家標準約束。
-
----
-
-## 第5頁｜市售食品檢測成果
-- 2006–2009 年：濃度魚貝類 > 肉類 > 乳製品
-- 2010–2013 年：油脂類最高，主要同源物為 BDE-209
-- 農產品監測：魚體含量相對較高，水產品較易檢出
-
-**講稿：** 食品監測結果顯示，PBDEs 主要出現在魚貝類與油脂類食品中，BDE-209 為主要檢出型態。
-
----
-
-## 第6頁｜整體趨勢與管理意涵
-- 商品端：多數樣品低檢出或未檢出
-- 食品端：仍需關注魚貝類、油脂類、特定肉類
-- 控制手段：CNS 標準、商品抽驗、食品監測
-
-**講稿：** 整體來看，PBDEs 在商品端的管制效果較為明顯；食品端則仍需持續關注高風險類別。
-
----
-
-## 第7頁｜結語
-- PBDEs 在國內市售商品與食品中整體暴露風險可控
-- 少數商品零組件仍可能檢出 PBDEs
-- 食品以魚貝類與油脂類較需留意
-- 持續監測與標準管理仍是關鍵
-
-**講稿：** 總結而言，PBDEs 的國內風險管理已有成效，但仍須持續監測以維護健康。`;
-
-document.getElementById('sourceContent').innerText = rawMarkdown;
-
-function generatePPT() {
-    // 檢查函式庫是否載入成功
-    if (typeof PptxGenJS === 'undefined') {
-        alert('函式庫尚未載入完成，請檢查網路連線或 CDN 連結。');
-        return;
-    }
-
-    // 1. 初始化 PptxGenJS
-    let pptx = new PptxGenJS();
-    pptx.layout = 'LAYOUT_16x9';
-
-    // 2. 切分頁面 (根據 --- 符號)
-    const pages = rawMarkdown.split('---');
-
-    pages.forEach((pageContent, index) => {
-        let slide = pptx.addSlide();
-        
-        // 提取標題 (假設格式為 ## 第X頁｜標題)
-        const titleMatch = pageContent.match(/## .*?｜(.*)/);
-        const titleText = titleMatch ? titleMatch[1].trim() : "簡報頁 " + (index + 1);
-
-        // 提取講稿 (備註欄)
-        const noteMatch = pageContent.match(/\*\*講稿：\*\*([\s\S]*)/);
-        const notes = noteMatch ? noteMatch[1].trim() : "";
-
-        // 設定標題樣式
-        slide.addText(titleText, { 
-            x: 0.5, y: 0.5, w: '90%', h: 1, 
-            fontSize: 32, bold: true, color: '363636', valign: 'middle' 
-        });
-
-        // 提取主體內容 (過濾掉標題和講稿的部分)
-        let bodyContent = pageContent
-            .replace(/## .*/, '') // 刪除標題行
-            .replace(/\*\*講稿：\*\*[\s\S]*/, '') // 刪除講稿部分
-            .replace(/\*\*(.*?)\*\*/g, '$1') // 去除粗體 Markdown 標籤
-            .trim();
-
-        // 將內容按行分割並處理成條目
-        let lines = bodyContent.split('\n').filter(line => line.trim() !== '');
-        
-        if (index === 0) {
-            // 第一頁特殊處理：標題頁佈局
-            slide.addText(bodyContent, { 
-                x: 0.5, y: 2, w: '90%', h: 3, 
-                fontSize: 20, align: 'center', color: '666666' 
-            });
-        } else {
-            // 普通頁：清單佈局
-            let bulletPoints = lines.map(line => {
-                return { text: line.replace(/^- /, '').trim(), options: { bullet: true, margin: [5, 0, 5, 0] } };
-            });
-
-            slide.addText(bulletPoints, { 
-                x: 0.5, y: 1.5, w: '90%', h: 4, 
-                fontSize: 18, color: '444444', valign: 'top' 
-            });
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            line-height: 1.6;
         }
 
-        // 加入講稿到備註欄 (Notes)
-        slide.addNotes(notes);
-    });
+        .container {
+            max-width: 800px;
+            margin: auto;
+            text-align: center;
+        }
 
-    // 3. 儲存檔案
-    pptx.writeFile({ fileName: `PBDEs_檢測成果報告_2026.pptx` });
-}
-</script>
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        pre {
+            text-align: left;
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>PBDEs 檢測成果簡報轉換器</h2>
+        <p>點擊下方按鈕將 Markdown 內容轉換為 PowerPoint 檔案</p>
+        <button onclick="generatePPT()">下載 PPTX 簡報</button>
+        <hr>
+        <h3>預覽原始內容：</h3>
+        <pre id="sourceContent"></pre>
+    </div>
+
+    <script>
+        // 你提供的原始 Markdown 內容
+        const rawMarkdown = `以下依據提供的上下文，整理「多溴二苯醚（PBDEs）在市售商品及食品的檢測成果」：
+
+## 一、市售商品檢測成果
+- **2016 年**
+  - 針對 **3 種品牌空氣清淨機之零組件**進行檢測。
+  - 結果：**1 品牌空氣清淨機的 4 種塑膠零組件**檢出超過 **CNS 15663** 規定限量值 **0.1% w/w** 的七至十溴多溴二苯醚混合物，且以**十溴二苯醚**為主。
+  - 另有 **3 種零組件**偵測到低於 **200 ppm** 的 **2,2',3,4,4',5',6-七溴二苯醚**，MDL 為 **25 ppm**。
+
+- **2018 年**
+  - 針對 **電腦機殼、吹風機、電源延長線**等 6 件樣品檢測。
+  - 結果：**5 件未檢出**（MDL = **0.01 w/w%**），**1 件檢出 0.017 w/w% 十溴二苯醚**，但仍**符合 CNS 15663 的 0.1% w/w 限量**。
+
+- **2022 至 2024 年**
+  - 針對 **兒童玩具用品**進行檢測：
+    - **2022 年：30 件**
+    - **2023 年：20 件**
+    - **2024 年：20 件**
+  - 結果：**均未檢出五溴二苯醚及八溴二苯醚**。
+
+## 二、食品檢測成果
+- **2006–2009 年**
+  - 衛福部針對市售 **乳製品、肉類、魚貝類**等共 **98 件樣品**調查 PBDEs 殘留。
+  - 結果顯示整體分布趨勢為：**魚貝類 > 肉類 > 乳製品**。
+
+- **2010–2013 年**
+  - 陸續檢測 **600 件食品**之 PBDEs 殘留。
+  - 結果顯示：
+    - **油脂類含量最高**
+    - 各類食品中的 PBDEs **均以 BDE-209 最高**
+
+- **2014 年市售食品六溴環十二烷調查**
+  - 衛福部完成 **270 件市售食品**中六溴環十二烷（HBCDs）含量調查。
+  - 有 **44 件（16%）**檢出 HBCD 同源物。
+  - 食品類別中：
+    - **海水魚類檢出率 69% 最高**
+    - **貝類 63% 次之**
+    - 陸生性食品檢出率均較低，**多在 20% 以下**
+  - 但各類食品的 **HBCDs 總濃度檢出率均未過半**，**中位數皆為 ND**。
+
+## 三、整體判斷
+- 市售商品方面，PBDEs 在少數電子電器零組件中曾有檢出，但整體仍多符合國家標準。
+- 食品方面，PBDEs 主要出現在 **魚貝類、油脂類**等較高脂肪食品，且以 **BDE-209** 為主要同源物。
+- 就整體管制成果看，相關檢出多屬低濃度或符合規範，顯示國內對 PBDEs 的管理已具一定成效。
+
+---
+
+# [報頭]
+
+## 簡報標題：多溴二苯醚（PBDEs）在市售商品及食品的檢測成果
+
+---
+
+### 第 1 頁｜標題頁
+**多溴二苯醚（PBDEs）在市售商品及食品的檢測成果**  
+副標題：依據 POPs 國家實施計畫歷年執行成果整理  
+日期：2026 年 4 月
+
+**講稿：**  
+本簡報整理我國 POPs 國家實施計畫中，多溴二苯醚在市售商品與食品的檢測結果，重點呈現檢出情形、類別差異及整體管制成效。
+
+---
+
+### 第 2 頁｜大綱頁
+1. PBDEs 檢測背景  
+2. 市售商品檢測成果  
+3. 食品檢測成果  
+4. 重點結論
+
+**講稿：**  
+接下來將依序說明 PBDEs 的商品與食品檢測情況，最後整理整體重點與結論。
+
+---
+
+### 第 3 頁｜PBDEs 檢測背景
+- PBDEs 屬於溴化阻燃劑，為 POPs 管制關注物質之一
+- 國內檢測主要涵蓋：
+  - 市售商品
+  - 市售食品
+  - 農漁畜產品
+- 檢測目的：
+  - 掌握暴露來源
+  - 評估食品與商品安全
+  - 支持風險管理與標準制定
+
+**講稿：**  
+PBDEs 是常見的溴化阻燃劑，因具持久性與生物累積性而受到關注。國內透過商品與食品監測，了解民眾可能暴露途徑並作為管理依據。
+
+---
+
+### 第 4 頁｜市售商品檢測成果
+- **2016 年**
+  - 3 種品牌空氣清淨機零組件檢測
+  - 1 品牌 4 種塑膠零組件檢出七至十溴 PBDEs 混合物
+  - 以十溴二苯醚為主，超過 **0.1% w/w** 限量
+- **2018 年**
+  - 電腦機殼、吹風機、電源延長線共 6 件
+  - 5 件未檢出，1 件檢出 **0.017 w/w%** 十溴二苯醚
+  - 仍符合 **CNS 15663** 標準
+- **2022–2024 年**
+  - 兒童玩具用品共 70 件
+  - 均未檢出五溴與八溴二苯醚
+
+**講稿：**  
+市售商品監測顯示，少數電子零組件曾有 PBDEs 檢出，但濃度多符合規範。兒童玩具近年檢測則均未檢出五溴與八溴二苯醚，顯示商品端管理已有一定成效。
+
+---
+
+### 第 5 頁｜食品檢測成果
+- **2006–2009 年**
+  - 98 件市售乳製品、肉類、魚貝類
+  - 檢出分布：**魚貝類 > 肉類 > 乳製品**
+- **2010–2013 年**
+  - 600 件食品
+  - **油脂類最高**
+  - 各類食品以 **BDE-209** 為主要同源物
+- **2014 年**
+  - 270 件市售食品中 HBCD 調查
+  - 44 件檢出 HBCD 同源物，檢出率 16%
+  - 海水魚類、貝類檢出率較高
+  - 中位數多為 ND
+
+**講稿：**  
+食品監測結果顯示 PBDEs 在高脂肪食品與水產類較容易檢出，尤其以 BDE-209 最常見。對於 HBCD 的調查也顯示，水產類檢出率相對較高，但整體濃度多屬低值或未檢出。
+
+---
+
+### 第 6 頁｜重點結論
+- PBDEs 在商品端主要出現在部分電子電器零組件
+- 多數商品檢測結果仍符合國家標準
+- 食品端以魚貝類與油脂類較易檢出 PBDEs
+- 主要同源物以 **BDE-209** 為主
+- 整體而言，國內 PBDEs 管控與監測已具明顯成效
+
+**講稿：**  
+總結來說，PBDEs 的檢測結果顯示商品端與食品端雖有局部檢出，但大多仍在可控範圍，反映我國相關管理與監測機制已發揮作用。
+
+---
+
+# [報尾]
+
+### 資料來源
++ [1] 2023年成果報告.pdf
++ [2] 2024年成果報告 (1).pdf`;
+
+        document.getElementById('sourceContent').innerText = rawMarkdown;
+
+        function generatePPT() {
+            //擷取簡報文字稿從"[報頭]"之後至"[報尾]"之前的內容,不含這兩個標籤
+            const pptRegex = /\[報頭\]([\s\S]*?)\[報尾\]/;
+            const pptMatch = rawMarkdown.match(pptRegex);
+            const pptContent = pptMatch ? pptMatch[1].trim() : null;
+            if (!pptContent) {
+                alert("無法找到簡報內容，請確認 AI 回應格式是否正確。");
+                return;
+            }
+
+            // 檢查函式庫是否載入成功
+            if (typeof PptxGenJS === 'undefined') {
+                alert('函式庫尚未載入完成，請檢查網路連線或 CDN 連結。');
+                return;
+            }
+
+            // 1. 初始化 PptxGenJS
+            let pptx = new PptxGenJS();
+            pptx.layout = 'LAYOUT_16x9';
+
+            // 2. 切分頁面 (根據 --- 符號)
+            const pages = pptContent.split('---');
+
+            pages.forEach((pageContent, index) => {
+                let slide = pptx.addSlide();
+
+                // 提取標題 (假設格式為 ## 第X頁｜標題)
+                const titleMatch = pageContent.match(/## .*?｜(.*)/);
+                const titleText = titleMatch ? titleMatch[1].trim() : "簡報頁 " + (index + 1);
+
+                // 提取講稿 (備註欄)
+                const noteMatch = pageContent.match(/\*\*講稿：\*\*([\s\S]*)/);
+                const notes = noteMatch ? noteMatch[1].trim() : "";
+
+                // 設定標題樣式
+                slide.addText(titleText, {
+                    x: 0.5, y: 0.5, w: '90%', h: 1,
+                    fontSize: 32, bold: true, color: '363636', valign: 'middle'
+                });
+
+                // 提取主體內容 (過濾掉標題和講稿的部分)
+                let bodyContent = pageContent
+                    .replace(/## .*/, '') // 刪除標題行
+                    .replace(/\*\*講稿：\*\*[\s\S]*/, '') // 刪除講稿部分
+                    .replace(/\*\*(.*?)\*\*/g, '$1') // 去除粗體 Markdown 標籤
+                    .trim();
+
+                // 將內容按行分割並處理成條目
+                let lines = bodyContent.split('\n').filter(line => line.trim() !== '');
+
+                if (index === 0) {
+                    // 第一頁特殊處理：標題頁佈局
+                    slide.addText(bodyContent, {
+                        x: 0.5, y: 2, w: '90%', h: 3,
+                        fontSize: 20, align: 'center', color: '666666'
+                    });
+                } else {
+                    // 普通頁：清單佈局
+                    let bulletPoints = lines.map(line => {
+                        return { text: line.replace(/^- /, '').trim(), options: { bullet: true, margin: [5, 0, 5, 0] } };
+                    });
+
+                    slide.addText(bulletPoints, {
+                        x: 0.5, y: 1.5, w: '90%', h: 4,
+                        fontSize: 18, color: '444444', valign: 'top'
+                    });
+                }
+
+                // 加入講稿到備註欄 (Notes)
+                slide.addNotes(notes);
+            });
+
+            // 3. 儲存檔案
+            pptx.writeFile({ fileName: `PBDEs_檢測成果報告_2026.pptx` });
+        }
+    </script>
 
 </body>
+
 </html>

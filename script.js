@@ -12,15 +12,121 @@ const userInput = document.getElementById("userInput");
 const sendBtn = document.getElementById("sendBtn");
 const modelSelect = document.getElementById("modelSelect");
 
+function generatePPT(fullText) {
+  // 1. 擷取 [報頭] 到 [報尾] 之間的內容
+  const contentMatch = fullText.match(/\[報頭\]([\s\S]*?)\[報尾\]/);
+  if (!contentMatch) {
+    alert("找不到 [報頭] 或 [報尾] 標籤");
+    return;
+  }
+  const mainContent = contentMatch[1];
+
+  // 2. 初始化 PptxGenJS
+  let pptx = new PptxGenJS();
+  pptx.layout = "LAYOUT_16x9";
+
+  // 2. 切分頁面 (根據 --- 符號)
+  const pages = mainContent.split("---");
+
+  pages.forEach((pageContent, index) => {
+    let slide = pptx.addSlide();
+
+    // 提取標題 (假設格式為 ### 第X頁｜標題)
+    const titleMatch = pageContent.match(/### .*?｜(.*)/);
+    const titleText = titleMatch
+      ? titleMatch[1].trim()
+      : "簡報頁 " + (index + 1);
+
+    // 提取講稿 (備註欄)
+    const noteMatch = pageContent.match(/\*\*講稿：\*\*([\s\S]*)/);
+    const notes = noteMatch ? noteMatch[1].trim() : "";
+
+    // 設定標題樣式
+    slide.addText(titleText, {
+      x: 0.5,
+      y: 0.5,
+      w: "90%",
+      h: 1,
+      fontSize: 32,
+      bold: true,
+      color: "363636",
+      valign: "middle",
+    });
+
+    // 提取主體內容 (過濾掉標題和講稿的部分)
+    let bodyContent = pageContent
+      .replace(/### .*/, "") // 刪除標題行
+      .replace(/\*\*講稿：\*\*[\s\S]*/, "") // 刪除講稿部分
+      .replace(/\*\*(.*?)\*\*/g, "$1") // 去除粗體 Markdown 標籤
+      .trim();
+
+    // 將內容按行分割並處理成條目
+    let lines = bodyContent.split("\n").filter((line) => line.trim() !== "");
+
+    if (index === 0) {
+      // 第一頁特殊處理：標題頁佈局
+      slide.addText(bodyContent, {
+        x: 0.5,
+        y: 2,
+        w: "90%",
+        h: 3,
+        fontSize: 20,
+        align: "center",
+        color: "666666",
+      });
+    } else {
+      // 普通頁：清單佈局（支援階層與樣式）
+      let bulletPoints = lines.map((line) => {
+        const rawLine = line.replace(/\t/g, "    ");
+        const indentSpaces = (rawLine.match(/^(\s*)/) || ["", ""])[1].length;
+        const level = Math.min(Math.floor(indentSpaces / 2), 4);
+
+        const text = rawLine
+          .trim()
+          .replace(/^[-*+]\s+/, "")
+          .replace(/^\d+\.\s+/, "")
+          .trim();
+
+        return {
+          text,
+          options: {
+            bullet: { indent: 16 + level * 18 },
+            margin: [8 + level * 14, 4, 0, 3],
+            breakLine: true,
+            bold: level === 0,
+            fontSize: level === 0 ? 22 : level === 1 ? 18 : 16,
+            color: level === 0 ? "222222" : level === 1 ? "444444" : "666666",
+          },
+        };
+      });
+
+      slide.addText(bulletPoints, {
+        x: 0.7,
+        y: 1.5,
+        w: 8.8,
+        h: 4.8,
+        valign: "top",
+        paraSpaceAfterPt: 8,
+        breakLine: false,
+      });
+    }
+
+    // 加入講稿到備註欄 (Notes)
+    slide.addNotes(notes);
+  });
+
+  // 4. 下載檔案
+  pptx.writeFile({ fileName: "POPs_Report.pptx" });
+}
+
 /**
- * 語音合成示範（非 Streaming）
+ * 語音合成（非 Streaming）
  */
 async function generateSpeech(textSpeech) {
   const url = CONFIG.BASE_URL + "/v1/audio/speech";
   const apiKey = CONFIG.API_KEY; // 建議將 Key 放在環境變數
 
   const payload = {
-    model: "tts-1",
     input: textSpeech,
     voice: "alloy",
   };
@@ -197,6 +303,12 @@ async function sendMessage() {
     mp3Btn.textContent = "Export to MP3";
     mp3Btn.onclick = () => generateSpeech(fullContent);
     funcDiv.appendChild(mp3Btn);
+
+    // 新增 Export to PPTX 功能按鈕
+    const pptxBtn = document.createElement("button");
+    pptxBtn.textContent = "Export to PPTX";
+    pptxBtn.onclick = () => generatePPT(fullContent);
+    funcDiv.appendChild(pptxBtn);
   } catch (error) {
     console.error("API Error:", error);
     appendMessage("ai", "Streaming failed. Please check API or network.");
