@@ -14,6 +14,14 @@ const sendBtn = document.getElementById("sendBtn");
 const pdfBtn = document.getElementById("pdfBtn");
 const modelSelect = document.getElementById("modelSelect");
 
+function formatMessageTime(date = new Date()) {
+  return date.toLocaleTimeString("zh-TW", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
 async function exportChatToPDF() {
   if (!chatContainer || !window.html2canvas || !window.jspdf) {
     alert("PDF 匯出功能尚未就緒");
@@ -330,6 +338,7 @@ async function sendMessage() {
   // 建立 AI 訊息容器（即時更新）
   const aiDiv = document.createElement("div");
   aiDiv.className = "message ai markdown-content";
+
   chatBox.appendChild(aiDiv);
 
   try {
@@ -352,6 +361,8 @@ async function sendMessage() {
     const decoder = new TextDecoder("utf-8");
 
     let buffer = "";
+
+    fullContent = `### 🤖${MODEL_ID} `;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -466,7 +477,7 @@ function processFunctions(MODEL_ID, fullContent) {
 function appendMessage(role, text) {
   const msgDiv = document.createElement("div");
   msgDiv.className = `message ${role}`;
-  msgDiv.textContent = text;
+  msgDiv.textContent = `👦 ` + text;
   chatBox.appendChild(msgDiv);
   scrollToBottom();
 }
