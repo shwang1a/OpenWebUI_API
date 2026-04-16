@@ -312,7 +312,8 @@ async function sendMessage() {
   let text = userInput.value.trim();
   if (!text) return;
 
-  let fullContent = "";
+  const modeltext = modelSelect.options[modelSelect.selectedIndex].text;
+  let fullContent = `### 🤖 【${modeltext}】`;
   let sources = [];
   let tool_ids = [];
 
@@ -361,8 +362,6 @@ async function sendMessage() {
     const decoder = new TextDecoder("utf-8");
 
     let buffer = "";
-
-    fullContent = `### 🤖${MODEL_ID} `;
 
     while (true) {
       const { done, value } = await reader.read();
