@@ -8,9 +8,140 @@ const CONFIG = {
 let MODEL_ID = "pops_\u5fc3\u88fd\u5716";
 
 const chatBox = document.getElementById("chat-box");
+const chatContainer = document.getElementById("chat-container");
 const userInput = document.getElementById("userInput");
 const sendBtn = document.getElementById("sendBtn");
+const pdfBtn = document.getElementById("pdfBtn");
 const modelSelect = document.getElementById("modelSelect");
+
+async function exportChatToPDF() {
+  if (!chatContainer || !window.html2canvas || !window.jspdf) {
+    alert("PDF 匯出功能尚未就緒");
+    return;
+  }
+
+  const originalScrollTop = chatContainer.scrollTop;
+  const originalStyle = {
+    height: chatContainer.style.height,
+    maxHeight: chatContainer.style.maxHeight,
+    overflow: chatContainer.style.overflow,
+  };
+
+  try {
+    chatContainer.scrollTop = 0;
+    chatContainer.style.height = `${chatContainer.scrollHeight}px`;
+    chatContainer.style.maxHeight = "none";
+    chatContainer.style.overflow = "visible";
+
+    const pageBreakSelectors = [
+      "#chat-box > *",
+      ".message",
+      ".message > *",
+      ".message li",
+      ".message pre",
+      ".message table",
+      ".mermaid",
+      "svg",
+    ];
+    const breakPoints = new Set([0, chatContainer.scrollHeight]);
+
+    pageBreakSelectors.forEach((selector) => {
+      chatContainer.querySelectorAll(selector).forEach((element) => {
+        const top = element.offsetTop;
+        const bottom = top + element.offsetHeight;
+        if (element.offsetHeight > 0) {
+          breakPoints.add(top);
+          breakPoints.add(bottom);
+        }
+      });
+    });
+
+    const sortedBreakPoints = Array.from(breakPoints)
+      .filter((point) => point >= 0)
+      .sort((a, b) => a - b);
+
+    const canvas = await html2canvas(chatContainer, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: "#ffffff",
+      windowWidth: chatContainer.scrollWidth,
+      windowHeight: chatContainer.scrollHeight,
+    });
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 10;
+    const usableWidth = pageWidth - margin * 2;
+    const usableHeight = pageHeight - margin * 2;
+
+    const imgWidth = usableWidth;
+    const pxPerMm = canvas.width / usableWidth;
+    const pageCanvasHeight = Math.floor(usableHeight * pxPerMm);
+
+    let renderedHeight = 0;
+    let pageIndex = 0;
+
+    while (renderedHeight < canvas.height) {
+      const remainingHeight = canvas.height - renderedHeight;
+      let targetHeight = Math.min(pageCanvasHeight, remainingHeight);
+
+      if (remainingHeight > pageCanvasHeight) {
+        const maxBoundary = sortedBreakPoints.filter(
+          (point) =>
+            point > renderedHeight &&
+            point <= renderedHeight + pageCanvasHeight,
+        );
+        const bestBreakPoint = maxBoundary.length
+          ? maxBoundary[maxBoundary.length - 1]
+          : renderedHeight + pageCanvasHeight;
+
+        if (bestBreakPoint > renderedHeight) {
+          targetHeight = bestBreakPoint - renderedHeight;
+        }
+      }
+
+      const sliceCanvas = document.createElement("canvas");
+      sliceCanvas.width = canvas.width;
+      sliceCanvas.height = targetHeight;
+
+      const sliceContext = sliceCanvas.getContext("2d");
+      sliceContext.drawImage(
+        canvas,
+        0,
+        renderedHeight,
+        canvas.width,
+        sliceCanvas.height,
+        0,
+        0,
+        canvas.width,
+        sliceCanvas.height,
+      );
+
+      const sliceData = sliceCanvas.toDataURL("image/png");
+      const sliceHeightMm = (sliceCanvas.height * imgWidth) / sliceCanvas.width;
+
+      if (pageIndex > 0) {
+        pdf.addPage();
+      }
+
+      pdf.addImage(sliceData, "PNG", margin, margin, imgWidth, sliceHeightMm);
+      renderedHeight += sliceCanvas.height;
+      pageIndex += 1;
+    }
+
+    pdf.save("chat-export.pdf");
+  } catch (error) {
+    console.error("PDF export failed:", error);
+    alert("PDF 匯出失敗，請稍後再試");
+  } finally {
+    chatContainer.style.height = originalStyle.height;
+    chatContainer.style.maxHeight = originalStyle.maxHeight;
+    chatContainer.style.overflow = originalStyle.overflow;
+    chatContainer.scrollTop = originalScrollTop;
+  }
+}
 
 function generatePPT(fullText) {
   // 1. 擷取 [報頭] 到 [報尾] 之間的內容
@@ -300,13 +431,15 @@ async function sendMessage() {
 
     // 新增 Export to MP3 功能按鈕
     const mp3Btn = document.createElement("button");
-    mp3Btn.textContent = "Export to MP3";
+    mp3Btn.className = "mp3-btn";
+    mp3Btn.textContent = "語音檔";
     mp3Btn.onclick = () => generateSpeech(fullContent);
     funcDiv.appendChild(mp3Btn);
 
     // 新增 Export to PPTX 功能按鈕
     const pptxBtn = document.createElement("button");
-    pptxBtn.textContent = "Export to PPTX";
+    pptxBtn.className = "pptx-btn";
+    pptxBtn.textContent = "簡報檔";
     pptxBtn.onclick = () => generatePPT(fullContent);
     funcDiv.appendChild(pptxBtn);
   } catch (error) {
@@ -355,6 +488,10 @@ function scrollToBottom() {
  * 事件綁定
  */
 sendBtn.addEventListener("click", sendMessage);
+
+if (pdfBtn) {
+  pdfBtn.addEventListener("click", exportChatToPDF);
+}
 
 userInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") {
