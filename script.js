@@ -310,18 +310,18 @@ async function sendMessage() {
 
   if (modelSelect) {
     MODEL_ID = modelSelect.value;
-    switch (MODEL_ID) {
-      case "pops_簡報":
-        tool_ids = ["export_to_pptx"];
-        text += "，製作簡報";
-        break;
-      case "pops_mp3":
-        tool_ids = ["export_to_mp3"];
-        text += "，下載音檔";
-        break;
-      default:
-        tool_ids = [];
-    }
+    // switch (MODEL_ID) {
+    //   case "pops_簡報":
+    //     tool_ids = ["export_to_pptx"];
+    //     text += "，製作簡報";
+    //     break;
+    //   case "pops_mp3":
+    //     tool_ids = ["export_to_mp3"];
+    //     text += "，下載音檔";
+    //     break;
+    //   default:
+    //     tool_ids = [];
+    // }
   }
 
   appendMessage("user", text);
@@ -425,7 +425,7 @@ async function sendMessage() {
     processMermaid(fullContent);
 
     // 根據最終內容決定是否顯示功能按鈕
-    processFunctions(fullContent);
+    processFunctions(MODEL_ID, fullContent);
   } catch (error) {
     console.error("API Error:", error);
     appendMessage("ai", "Streaming failed. Please check API or network.");
@@ -434,9 +434,10 @@ async function sendMessage() {
 
 /**
  *  根據內容決定是否顯示功能按鈕（如 Export to MP3 / PPTX）
+ * @param {string} MODEL_ID
  * @param {string} fullContent
  */
-function processFunctions(fullContent) {
+function processFunctions(MODEL_ID, fullContent) {
   // 建立 功能按鈕列容器
   const funcDiv = document.createElement("div");
   funcDiv.className = "function-buttons";
@@ -449,12 +450,14 @@ function processFunctions(fullContent) {
   mp3Btn.onclick = () => generateSpeech(fullContent);
   funcDiv.appendChild(mp3Btn);
 
-  // 新增 Export to PPTX 功能按鈕
-  const pptxBtn = document.createElement("button");
-  pptxBtn.className = "pptx-btn";
-  pptxBtn.textContent = "簡報檔";
-  pptxBtn.onclick = () => generatePPT(fullContent);
-  funcDiv.appendChild(pptxBtn);
+  if (MODEL_ID === "popsmarkdown") {
+    // 新增 Export to PPTX 功能按鈕
+    const pptxBtn = document.createElement("button");
+    pptxBtn.className = "pptx-btn";
+    pptxBtn.textContent = "簡報檔";
+    pptxBtn.onclick = () => generatePPT(fullContent);
+    funcDiv.appendChild(pptxBtn);
+  }
 }
 
 /**
