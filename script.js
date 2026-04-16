@@ -424,28 +424,37 @@ async function sendMessage() {
     // 處理 mermaid
     processMermaid(fullContent);
 
-    // 建立 功能按鈕列容器
-    const funcDiv = document.createElement("div");
-    funcDiv.className = "function-buttons";
-    aiDiv.appendChild(funcDiv);
-
-    // 新增 Export to MP3 功能按鈕
-    const mp3Btn = document.createElement("button");
-    mp3Btn.className = "mp3-btn";
-    mp3Btn.textContent = "語音檔";
-    mp3Btn.onclick = () => generateSpeech(fullContent);
-    funcDiv.appendChild(mp3Btn);
-
-    // 新增 Export to PPTX 功能按鈕
-    const pptxBtn = document.createElement("button");
-    pptxBtn.className = "pptx-btn";
-    pptxBtn.textContent = "簡報檔";
-    pptxBtn.onclick = () => generatePPT(fullContent);
-    funcDiv.appendChild(pptxBtn);
+    // 根據最終內容決定是否顯示功能按鈕
+    processFunctions(fullContent);
   } catch (error) {
     console.error("API Error:", error);
     appendMessage("ai", "Streaming failed. Please check API or network.");
   }
+}
+
+/**
+ *  根據內容決定是否顯示功能按鈕（如 Export to MP3 / PPTX）
+ * @param {string} fullContent
+ */
+function processFunctions(fullContent) {
+  // 建立 功能按鈕列容器
+  const funcDiv = document.createElement("div");
+  funcDiv.className = "function-buttons";
+  chatBox.appendChild(funcDiv);
+
+  // 新增 Export to MP3 功能按鈕
+  const mp3Btn = document.createElement("button");
+  mp3Btn.className = "mp3-btn";
+  mp3Btn.textContent = "語音檔";
+  mp3Btn.onclick = () => generateSpeech(fullContent);
+  funcDiv.appendChild(mp3Btn);
+
+  // 新增 Export to PPTX 功能按鈕
+  const pptxBtn = document.createElement("button");
+  pptxBtn.className = "pptx-btn";
+  pptxBtn.textContent = "簡報檔";
+  pptxBtn.onclick = () => generatePPT(fullContent);
+  funcDiv.appendChild(pptxBtn);
 }
 
 /**
