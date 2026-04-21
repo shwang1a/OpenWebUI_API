@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open WebUI AI Chat</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="pptxgen.bundle.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h2>[環境荷爾蒙推動小組執行成果】對話機器人</h2>
+        </header>
+
+        <div id="chat-container">
+            <div id="chat-box">
+            </div>
+        </div>
+
+        <div class="input-area">
+            <label for="modelSelect">&#27169;&#22411;</label>
+            <select id="modelSelect">
+                <option value="EDCS">EDCS</option>
+                <option value="gpt-5.4">gpt-5.4</option>
+            </select>
+            <input type="text" id="userInput" placeholder="&#35531;&#36664;&#20837;&#21839;&#38988;..." />
+            <button id="sendBtn">&#20659;&#36865;</button>
+            <button id="pdfBtn">PDF</button>
+        </div>
+    </div>
+
+    <script src="script_edcs.js"></script>
+    <script>
+        MODEL_ID = "EDCS";
+    </script>
+</body>
+
+</html>

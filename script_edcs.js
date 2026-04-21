@@ -1,11 +1,11 @@
 mermaid.initialize({ startOnLoad: false, theme: "default" });
 
 const CONFIG = {
-  API_KEY: "sk-0272fcf92eb543d7bf1ae39f29f2d2d5",
-  BASE_URL: "https://webui.igis.com.tw/api",
+  API_KEY: "sk-f5f7a920db524ed5bc69e90a37d8f1dd", // 建議改為從環境變數讀取
+  BASE_URL: "http://172.29.3.197:8080/api",
 };
 
-let MODEL_ID = "pops_\u5fc3\u88fd\u5716";
+let MODEL_ID = "EDCS";
 
 const chatBox = document.getElementById("chat-box");
 const chatContainer = document.getElementById("chat-container");
