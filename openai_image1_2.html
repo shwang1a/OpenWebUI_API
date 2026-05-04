@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>AI 專業資訊圖表產生器 Pro</title>
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            max-width: 1300px;
+            margin: auto;
+            padding: 30px;
+            background: #f4f6f8;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .panel {
+            background: #fff;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 260px;
+            font-size: 16px;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        select,
+        button {
+            padding: 10px 18px;
+            font-size: 16px;
+            margin-top: 12px;
+            margin-right: 8px;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        #loading {
+            color: #d60000;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        #summary {
+            background: #eef6ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            line-height: 1.7;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, .08);
+            padding: 15px;
+        }
+
+        .card img {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .download {
+            display: inline-block;
+            margin-top: 12px;
+            text-decoration: none;
+            background: #0066ff;
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 8px;
+        }
+
+        small {
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🔥 AI 專業資訊圖表產生器 Pro</h1>
+
+    <div class="panel">
+
+        <textarea id="content" placeholder="貼上報告內容，例如：國內PFOS及PFOA之環境介質管理成果報告..."></textarea>
+
+        <br>
+
+        <select id="style">
+            <option value="政府報告風格，正式專業，藍白配色">政府風</option>
+            <option value="科技感未來風格，數位介面，藍紫色系">科技風</option>
+            <option value="ESG永續風格，綠色環保，企業報告感">ESG風</option>
+        </select>
+
+        <button onclick="generateAll()">產生 3 張資訊圖</button>
+
+        <p id="loading"></p>
+
+        <div id="summary"></div>
+
+        <div id="images" class="grid"></div>
+
+    </div>
+
+    <script>
+        const apiKey = "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";
+
+        async function callChat(text) {
+
+            const response = await fetch("https://api.openai.com/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + apiKey
+                },
+                body: JSON.stringify({
+                    model: "gpt-4o-mini",
+                    messages: [
+                        {
+                            role: "user",
+                            content: `請將以下報告整理成5點重點摘要，使用繁體中文，條列式，簡潔專業：
+
+${text}`
+                        }
+                    ],
+                    temperature: 0.4
+                })
+            });
+
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+
+        async function callImage(prompt) {
+
+            const response = await fetch("https://api.openai.com/v1/images/generations", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + apiKey
+                },
+                body: JSON.stringify({
+                    model: "gpt-image-1",
+                    prompt: prompt,
+                    size: "1536x1024"
+                })
+            });
+
+            const data = await response.json();
+            return data.data[0].url;
+        }
+
+        async function generateAll() {
+
+            let text = document.getElementById("content").value.trim();
+
+            if (!text) {
+                alert("請貼上內容");
+                return;
+            }
+
+            let style = document.getElementById("style").value;
+
+            document.getElementById("loading").innerText = "AI 分析中，正在產生 3 張資訊圖...";
+            document.getElementById("summary").innerHTML = "";
+            document.getElementById("images").innerHTML = "";
+
+            try {
+
+                // Step1 自動抓重點
+                const summary = await callChat(text);
+
+                document.getElementById("summary").innerHTML =
+                    "<h3>📌 自動抓重點</h3><pre style='white-space:pre-wrap;font-family:inherit'>" +
+                    summary +
+                    "</pre>";
+
+                // Step2 產3張圖
+                for (let i = 1; i <= 3; i++) {
+
+                    let prompt = `
+根據以下摘要內容，產生繁體中文專業資訊圖表。
+
+摘要內容：
+${summary}
+
+風格：
+${style}
+
+要求：
+1. 高質感 infographic
+2. 清楚圖示
+3. 數據圖表
+4. 排版專業
+5. 第 ${i} 張採不同版型設計
+`;
+
+                    const imgUrl = await callImage(prompt);
+
+                    const html = `
+            <div class="card">
+                <h3>資訊圖表 ${i}</h3>
+                <img src="${imgUrl}">
+                <a class="download" href="${imgUrl}" download="infographic_${i}.png">下載 PNG</a>
+            </div>
+            `;
+
+                    document.getElementById("images").innerHTML += html;
+                }
+
+                document.getElementById("loading").innerText = "完成！";
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById("loading").innerText = "發生錯誤";
+            }
+        }
+    </script>
+
+</body>
+
+</html>
