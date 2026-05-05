@@ -76,6 +76,8 @@ async function exportChatToPDF() {
     return;
   }
 
+  if (pdfBtn) pdfBtn.disabled = true;
+
   const originalScrollTop = chatContainer.scrollTop;
   const originalStyle = {
     height: chatContainer.style.height,
@@ -192,6 +194,7 @@ async function exportChatToPDF() {
     console.error("PDF export failed:", error);
     alert("PDF 匯出失敗，請稍後再試");
   } finally {
+    if (pdfBtn) pdfBtn.disabled = false;
     chatContainer.style.height = originalStyle.height;
     chatContainer.style.maxHeight = originalStyle.maxHeight;
     chatContainer.style.overflow = originalStyle.overflow;
@@ -206,110 +209,124 @@ function generatePPT(fullText) {
     alert("找不到 [報頭] 或 [報尾] 標籤");
     return;
   }
-  const mainContent = contentMatch[1];
 
-  // 2. 初始化 PptxGenJS
-  let pptx = new PptxGenJS();
-  pptx.layout = "LAYOUT_16x9";
+  btn = document.querySelector(".pptx-btn");
+  if (btn) btn.disabled = true;
 
-  // 2. 切分頁面 (根據 --- 符號)
-  const pages = mainContent.split("---");
+  try {
+    const mainContent = contentMatch[1];
 
-  pages.forEach((pageContent, index) => {
-    let slide = pptx.addSlide();
+    // 2. 初始化 PptxGenJS
+    let pptx = new PptxGenJS();
+    pptx.layout = "LAYOUT_16x9";
 
-    // 提取標題 (假設格式為 ### 第X頁｜標題)
-    const titleMatch = pageContent.match(/### .*?｜(.*)/);
-    const titleText = titleMatch
-      ? titleMatch[1].trim()
-      : "簡報頁 " + (index + 1);
+    // 2. 切分頁面 (根據 --- 符號)
+    const pages = mainContent.split("---");
 
-    // 提取講稿 (備註欄)
-    const noteMatch = pageContent.match(/\*\*講稿：\*\*([\s\S]*)/);
-    const notes = noteMatch ? noteMatch[1].trim() : "";
+    pages.forEach((pageContent, index) => {
+      let slide = pptx.addSlide();
 
-    // 設定標題樣式
-    slide.addText(titleText, {
-      x: 0.5,
-      y: 0.5,
-      w: "90%",
-      h: 1,
-      fontSize: 32,
-      bold: true,
-      color: "363636",
-      valign: "middle",
+      // 提取標題 (假設格式為 ### 第X頁｜標題)
+      const titleMatch = pageContent.match(/### .*?｜(.*)/);
+      const titleText = titleMatch
+        ? titleMatch[1].trim()
+        : "簡報頁 " + (index + 1);
+
+      // 提取講稿 (備註欄)
+      const noteMatch = pageContent.match(/\*\*講稿：\*\*([\s\S]*)/);
+      const notes = noteMatch ? noteMatch[1].trim() : "";
+
+      // 設定標題樣式
+      slide.addText(titleText, {
+        x: 0.5,
+        y: 0.5,
+        w: "90%",
+        h: 1,
+        fontSize: 32,
+        bold: true,
+        color: "363636",
+        valign: "middle",
+      });
+
+      // 提取主體內容 (過濾掉標題和講稿的部分)
+      let bodyContent = pageContent
+        .replace(/### .*/, "") // 刪除標題行
+        .replace(/\*\*講稿：\*\*[\s\S]*/, "") // 刪除講稿部分
+        .replace(/\*\*(.*?)\*\*/g, "$1") // 去除粗體 Markdown 標籤
+        .trim();
+
+      // 將內容按行分割並處理成條目
+      let lines = bodyContent.split("\n").filter((line) => line.trim() !== "");
+
+      if (index === 0) {
+        // 第一頁特殊處理：標題頁佈局
+        slide.addText(bodyContent, {
+          x: 0.5,
+          y: 2,
+          w: "90%",
+          h: 3,
+          fontSize: 20,
+          align: "center",
+          color: "666666",
+        });
+      } else {
+        // 普通頁：清單佈局（支援階層與樣式）
+        let bulletPoints = lines.map((line) => {
+          const rawLine = line.replace(/\t/g, "    ");
+          const indentSpaces = (rawLine.match(/^(\s*)/) || ["", ""])[1].length;
+          const level = Math.min(Math.floor(indentSpaces / 2), 4);
+
+          const text = rawLine
+            .trim()
+            .replace(/^[-*+]\s+/, "")
+            .replace(/^\d+\.\s+/, "")
+            .trim();
+
+          return {
+            text,
+            options: {
+              bullet: { indent: 16 + level * 18 },
+              margin: [8 + level * 14, 4, 0, 3],
+              breakLine: true,
+              bold: level === 0,
+              fontSize: level === 0 ? 22 : level === 1 ? 18 : 16,
+              color: level === 0 ? "222222" : level === 1 ? "444444" : "666666",
+            },
+          };
+        });
+
+        slide.addText(bulletPoints, {
+          x: 0.7,
+          y: 1.5,
+          w: 8.8,
+          h: 4.8,
+          valign: "top",
+          paraSpaceAfterPt: 8,
+          breakLine: false,
+        });
+      }
+
+      // 加入講稿到備註欄 (Notes)
+      slide.addNotes(notes);
     });
 
-    // 提取主體內容 (過濾掉標題和講稿的部分)
-    let bodyContent = pageContent
-      .replace(/### .*/, "") // 刪除標題行
-      .replace(/\*\*講稿：\*\*[\s\S]*/, "") // 刪除講稿部分
-      .replace(/\*\*(.*?)\*\*/g, "$1") // 去除粗體 Markdown 標籤
-      .trim();
-
-    // 將內容按行分割並處理成條目
-    let lines = bodyContent.split("\n").filter((line) => line.trim() !== "");
-
-    if (index === 0) {
-      // 第一頁特殊處理：標題頁佈局
-      slide.addText(bodyContent, {
-        x: 0.5,
-        y: 2,
-        w: "90%",
-        h: 3,
-        fontSize: 20,
-        align: "center",
-        color: "666666",
-      });
-    } else {
-      // 普通頁：清單佈局（支援階層與樣式）
-      let bulletPoints = lines.map((line) => {
-        const rawLine = line.replace(/\t/g, "    ");
-        const indentSpaces = (rawLine.match(/^(\s*)/) || ["", ""])[1].length;
-        const level = Math.min(Math.floor(indentSpaces / 2), 4);
-
-        const text = rawLine
-          .trim()
-          .replace(/^[-*+]\s+/, "")
-          .replace(/^\d+\.\s+/, "")
-          .trim();
-
-        return {
-          text,
-          options: {
-            bullet: { indent: 16 + level * 18 },
-            margin: [8 + level * 14, 4, 0, 3],
-            breakLine: true,
-            bold: level === 0,
-            fontSize: level === 0 ? 22 : level === 1 ? 18 : 16,
-            color: level === 0 ? "222222" : level === 1 ? "444444" : "666666",
-          },
-        };
-      });
-
-      slide.addText(bulletPoints, {
-        x: 0.7,
-        y: 1.5,
-        w: 8.8,
-        h: 4.8,
-        valign: "top",
-        paraSpaceAfterPt: 8,
-        breakLine: false,
-      });
-    }
-
-    // 加入講稿到備註欄 (Notes)
-    slide.addNotes(notes);
-  });
-
-  // 4. 下載檔案
-  pptx.writeFile({ fileName: "POPs_Report.pptx" });
+    // 4. 下載檔案
+    pptx.writeFile({ fileName: "POPs_Report.pptx" });
+  } catch (error) {
+    console.error("PPTX 生成失敗:", error);
+    alert("簡報檔生成失敗，請稍後再試");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 /**
  * 語音合成（非 Streaming）
  */
 async function generateSpeech(textSpeech) {
+  btn = document.querySelector(".mp3-btn");
+  if (btn) btn.disabled = true;
+
   const url = CONFIG.BASE_URL + "/v1/audio/speech";
   const apiKey = CONFIG.API_KEY; // 建議將 Key 放在環境變數
 
@@ -350,10 +367,15 @@ async function generateSpeech(textSpeech) {
     console.log("語音下載成功！");
   } catch (error) {
     console.error("發生錯誤:", error);
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
 async function generateImage2(text) {
+  btn = document.querySelector(".image2-btn");
+  if (btn) btn.disabled = true;
+
   const apiKey = "sk-";
   let prompt = `
 請根據以下內容，產生專業資訊圖表，使用繁體中文；僅使用大號粗體清晰易讀的中文文字。
@@ -402,6 +424,8 @@ ${text}
     console.log("語音資訊圖表成功！");
   } catch (error) {
     console.error("發生錯誤:", error);
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
