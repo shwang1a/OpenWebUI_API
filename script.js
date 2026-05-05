@@ -353,6 +353,58 @@ async function generateSpeech(textSpeech) {
   }
 }
 
+async function generateImage2(text) {
+  const apiKey = "sk-";
+  let prompt = `
+請根據以下內容，產生專業資訊圖表，使用繁體中文；僅使用大號粗體清晰易讀的中文文字。
+
+內容：
+${text}
+
+風格要求：
+1. 政府報告風格
+2. 現代簡潔
+3. 含圖示、流程圖、數據圖表
+4. 配色藍綠色系
+5. 高品質 infographic
+`;
+
+  try {
+    const response = await fetch(
+      "https://api.openai.com/v1/images/generations",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + apiKey,
+        },
+        body: JSON.stringify({
+          model: "gpt-image-2",
+          prompt: prompt,
+          size: "1536x1024",
+        }),
+      },
+    );
+
+    const data = await response.json();
+    if (data.data) {
+      const b64_json = data.data[0].b64_json;
+      const link = document.createElement("a");
+      link.href = "data:image/png;base64," + b64_json;
+      link.download = "infographic.png";
+      document.body.appendChild(link);
+      link.click();
+
+      // 清理記憶體
+      document.body.removeChild(link);
+      link.remove();
+    }
+    console.log("語音資訊圖表成功！");
+  } catch (error) {
+    console.error("發生錯誤:", error);
+  }
+}
+
 /**
  * 發送訊息（Streaming版）
  */
@@ -523,6 +575,12 @@ function processFunctions(MODEL_ID, fullContent) {
     pptxBtn.onclick = () => generatePPT(fullContent);
     funcDiv.appendChild(pptxBtn);
   }
+
+  const image2Btn = document.createElement("button");
+  image2Btn.className = "image2-btn";
+  image2Btn.textContent = "資訊圖表";
+  image2Btn.onclick = () => generateImage2(fullContent);
+  funcDiv.appendChild(image2Btn);
 }
 
 /**

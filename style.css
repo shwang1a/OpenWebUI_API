@@ -129,7 +129,8 @@ header {
 }
 
 .mp3-btn,
-.pptx-btn {
+.pptx-btn,
+.image2-btn {
   padding: 0 20px;
   background: var(--primary-color);
   color: white;
