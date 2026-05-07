@@ -29,11 +29,11 @@
 
 ## 🔥 常用參數說明
 
-| 參數            | 用途   | 建議值                  |
-| ------------- | ---- | -------------------- |
-| quality       | 品質   | low / medium / high  |
+| 參數          | 用途     | 建議值               |
+| ------------- | -------- | -------------------- |
+| quality       | 品質     | low / medium / high  |
 | output_format | 輸出格式 | png / jpeg / webp    |
-| background    | 背景   | opaque / transparent |
+| background    | 背景     | opaque / transparent |
 | moderation    | 安全過濾 | auto / low           |
 
 ---
@@ -96,9 +96,9 @@ https://api.openai.com/v1
 
 若你填了 API Version，OpenWebUI 有些版本反而會送錯參數導致：
 
-* 400 error
-* unsupported parameter
-* Unknown parameter: response_format
+- 400 error
+- unsupported parameter
+- Unknown parameter: response_format
 
 ---
 
@@ -139,16 +139,16 @@ https://api.openai.com/v1
 
 ## 基本設定
 
-| 項目                  | 建議值                              |
-| ------------------- | -------------------------------- |
-| 啟用圖片生成              | ON                               |
-| 模型                  | `gpt-image-2`（若無則 `gpt-image-1`） |
-| 圖片尺寸                | `1536x1024`                      |
-| 圖片提示詞生成             | ON                               |
-| 圖片生成引擎              | OpenAI                           |
-| OpenAI API Base URL | `https://api.openai.com/v1`      |
-| OpenAI API 金鑰       | sk-xxxx                          |
-| OpenAI API 版本       | 留空                               |
+| 項目                | 建議值                                |
+| ------------------- | ------------------------------------- |
+| 啟用圖片生成        | ON                                    |
+| 模型                | `gpt-image-2`（若無則 `gpt-image-1`） |
+| 圖片尺寸            | `1536x1024`                           |
+| 圖片提示詞生成      | ON                                    |
+| 圖片生成引擎        | OpenAI                                |
+| OpenAI API Base URL | `https://api.openai.com/v1`           |
+| OpenAI API 金鑰     | sk-xxxx                               |
+| OpenAI API 版本     | 留空                                  |
 
 ---
 
@@ -169,12 +169,12 @@ https://api.openai.com/v1
 
 # 三、參數解釋（最重要）
 
-| 參數            | 建議值    | 說明    |
-| ------------- | ------ | ----- |
-| quality       | high   | 最佳畫質  |
+| 參數          | 建議值 | 說明       |
+| ------------- | ------ | ---------- |
+| quality       | high   | 最佳畫質   |
 | output_format | png    | 清晰無失真 |
-| background    | opaque | 一般背景  |
-| moderation    | auto   | 安全過濾  |
+| background    | opaque | 一般背景   |
+| moderation    | auto   | 安全過濾   |
 
 ---
 
@@ -192,8 +192,8 @@ https://api.openai.com/v1
 
 ### 說明
 
-* `opaque` = 一般背景（白底/正常場景）
-* `transparent` = 透明背景 PNG
+- `opaque` = 一般背景（白底/正常場景）
+- `transparent` = 透明背景 PNG
 
 ---
 
@@ -244,13 +244,13 @@ When user asks image generation in Chinese:
 
 # 八、最佳尺寸推薦
 
-| 用途  | 尺寸        |
-| --- | --------- |
+| 用途   | 尺寸      |
+| ------ | --------- |
 | 一般圖 | 1024x1024 |
-| 橫圖  | 1536x1024 |
-| 直圖  | 1024x1536 |
-| 海報  | 1024x1536 |
-| 桌布  | 1536x1024 |
+| 橫圖   | 1536x1024 |
+| 直圖   | 1024x1536 |
+| 海報   | 1024x1536 |
+| 桌布   | 1536x1024 |
 
 ---
 
@@ -298,11 +298,11 @@ masterpiece, ultra detailed, realistic lighting, cinematic composition, sharp fo
 
 # 十二、2026 最推薦模型排序
 
-| 模型          | 推薦度   |
-| ----------- | ----- |
+| 模型        | 推薦度     |
+| ----------- | ---------- |
 | gpt-image-2 | ⭐⭐⭐⭐⭐ |
-| gpt-image-1 | ⭐⭐⭐⭐  |
-| dall-e-3    | ⭐⭐⭐   |
+| gpt-image-1 | ⭐⭐⭐⭐   |
+| dall-e-3    | ⭐⭐⭐     |
 
 ---
 
@@ -324,5 +324,70 @@ masterpiece, ultra detailed, realistic lighting, cinematic composition, sharp fo
 
 我直接給你。
 
+---
 
+## OpenWebUI Image API使用
 
+```
+curl -X 'POST' \
+  'http://localhost:8080/api/v1/images/generations' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer sk-e8e9db65d14c4561a0da902d56e70d22' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "model": "gpt-image-1",
+  "prompt": "貓在鋼琴上睡著了",
+  "size": "1536x1024",
+  "n": 1,
+  "steps": 0
+}'
+```
+
+- Request URL
+  http://localhost:8080/api/v1/images/generations
+
+### Server response:
+
+Code 200
+
+- Response body
+
+```
+[
+  {
+    "url": "/api/v1/files/dfb67d35-a840-44c0-afce-469de79dd2d3/content"
+  }
+]
+```
+
+- Response headers
+  access-control-allow-credentials: true
+  access-control-allow-origin: http://localhost:8080
+  content-length: 70
+  content-type: application/json
+  date: Fri,08 May 2026 00:09:44 GMT
+  server: uvicorn
+  vary: Origin
+  x-process-time: 178
+
+### 422 Validation Error
+
+- application/json
+- Example Value Schema
+
+```
+{
+  "detail": [
+    {
+      "loc": [
+        "string",
+        0
+      ],
+      "msg": "string",
+      "type": "string",
+      "input": "string",
+      "ctx": {}
+    }
+  ]
+}
+```
