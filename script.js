@@ -1,7 +1,7 @@
 mermaid.initialize({ startOnLoad: false, theme: "default" });
 
 const CONFIG = {
-  API_KEY: "sk-0272fcf92eb543d7bf1ae39f29f2d2d5",
+  API_KEY: "sk-0272fcf92eb543d7bf1ae39f29f2d2d5", //"sk-39f0b09800d749c0b97d10c013332b3e" -1, //"sk-0272fcf92eb543d7bf1ae39f29f2d2d5"-docker,
   BASE_URL: "https://webui.igis.com.tw/api",
 };
 
@@ -503,6 +503,12 @@ async function sendMessage() {
         const jsonStr = line.replace("data:", "").trim();
 
         if (jsonStr === "[DONE]") break;
+
+        // Ensure the string looks like JSON before parsing to avoid errors with malformed data
+        if (!jsonStr.startsWith("{")) {
+          console.warn("Skipping non-JSON chunk:", jsonStr);
+          continue;
+        }
 
         try {
           const chunk = JSON.parse(jsonStr);
